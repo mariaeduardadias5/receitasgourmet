@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minhas Receitas - Receitas Gourmet</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Minhas Receitas</h1>
+    <button onclick="window.location.href='home.html'">🌎 Ver Todas as Receitas</button>
+    <button onclick="window.location.href='adicionar.html'">➕ Adicionar Receita</button>
+    <div id="lista"></div>
+    <button onclick="logout()">Sair</button>
+  </div>
+
+  <!-- Modal de Edição -->
+  <div id="modalEditar" class="modal">
+    <div class="modal-content">
+      <h2>Editar Receita</h2>
+      <label>Nome:</label>
+      <input type="text" id="editNome">
+
+      <label>Ingredientes:</label>
+      <textarea id="editIngredientes"></textarea>
+
+      <label>Modo de Preparo:</label>
+      <textarea id="editPreparo"></textarea>
+
+      <label>Tempo (min):</label>
+      <input type="text" id="editTempo">
+
+      <div class="modal-buttons">
+        <button id="salvarEdicao">💾 Salvar</button>
+        <button id="cancelarEdicao" class="cancelar">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const usuario = JSON.parse(localStorage.getItem('usuarioLogado'));
+  if (!usuario) {
+    alert("Faça login primeiro!");
+    window.location.href = "login.html";
+  }
+
+  const lista = document.getElementById('lista');
+  const modal = document.getElementById('modalEditar');
+  const editNome = document.getElementById('editNome');
+  const editIngredientes = document.getElementById('editIngredientes');
+  const editPreparo = document.getElementById('editPreparo');
+  const editTempo = document.getElementById('editTempo');
+  const btnSalvar = document.getElementById('salvarEdicao');
+  const btnCancelar = document.getElementById('cancelarEdicao');
+
+  let receitaAtual = null;
+
+  async function carregarReceitas() {
+    lista.innerHTML = '<p>Carregando receitas...</p>';
+    try {
+      const res = await fetch("http://127.0.0.1:5000/api/receitas");
+      const data = await res.json();
+      const minhas = data.filter(r => r.autor_id === usuario.id);
+      lista.innerHTML = '';
+
+      if (minhas.length === 0) {
+        lista.innerHTML = '<p>Nenhuma receita cadastrada.</p>';
+        return;
+      }
+
+      minhas.forEach(r => {
+        const div = document.createElement('div');
+        div.classList.add('receita');
+        div.innerHTML = `
+          <h2>${r.nome}</h2>
+          <p><b>Ingredientes:</b> ${r.ingredientes}</p>
+          <p><b>Preparo:</b> ${r.preparo}</p>
+          <p><b>Tempo:</b> ${r.tempo || 'Não informado'} min</p>
+          <div class="botoes">
+            <button onclick="abrirModal(${r.id}, '${r.nome}', '${r.ingredientes}', '${r.preparo}', '${r.tempo || ''}')">✏️ Editar</button>
+            <button onclick="excluirReceita(${r.id})">🗑️ Excluir</button>
+          </div>
+        `;
+        lista.appendChild(div);
+      });
+    } catch {
+      lista.innerHTML = '<p>Erro ao carregar receitas.</p>';
+    }
+  }
+
+  async function excluirReceita(id) {
+    if (!confirm("Deseja excluir esta receita?")) return;
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/api/receitas/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      alert(data.mensagem);
+      carregarReceitas();
+    } catch {
+      alert("Erro ao excluir receita.");
+    }
+  }
+
+  function abrirModal(id, nome, ingredientes, preparo, tempo) {
+    receitaAtual = id;
+    editNome.value = nome;
+    editIngredientes.value = ingredientes;
+    editPreparo.value = preparo;
+    editTempo.value = tempo;
+    modal.style.display = 'flex';
+  }
+
+  btnSalvar.addEventListener('click', async () => {
+    const nova = {
+      nome: editNome.value.trim(),
+      ingredientes: editIngredientes.value.trim(),
+      preparo: editPreparo.value.trim(),
+      tempo: editTempo.value.trim()
+    };
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/api/receitas/${receitaAtual}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nova)
+      });
+      const data = await res.json();
+      alert(data.mensagem);
+      modal.style.display = 'none';
+      carregarReceitas();
+    } catch {
+      alert("Erro ao atualizar receita.");
+    }
+  });
+
+  btnCancelar.addEventListener('click', () => modal.style.display = 'none');
+  window.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+  function logout() {
+    localStorage.removeItem('usuarioLogado');
+    window.location.href = "login.html";
+  }
+
+  carregarReceitas();
+  </script>
+</body>
+</html>
