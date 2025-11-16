@@ -10,6 +10,12 @@ CORS(app)
 # Inicializa o banco
 init_db()
 
+@app.route("/")
+def home():
+    return "🚀 API de Receitas Online — Status: Funcionando!"
+
+
+
 @app.route("/api/cadastrar", methods=["POST"])
 def cadastrar_usuario():
     data = request.json
