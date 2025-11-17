@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro - Receitas Gourmet</title>
+  <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Cadastro</h1>
+    <form id="formCadastro">
+      <input type="text" id="nome" placeholder="Nome completo" required>
+      <input type="email" id="email" placeholder="E-mail" required>
+      <input type="password" id="senha" placeholder="Senha" required minlength="6">
+      <input type="password" id="confirmar" placeholder="Confirmar senha" required minlength="6">
+      <button type="submit">Cadastrar</button>
+      <p>Já tem conta? <a href="login.html">Fazer login</a></p>
+    </form>
+  </div>
+
+<script>
+const form = document.getElementById('formCadastro');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const nome = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value.trim();
+  const confirmar = document.getElementById('confirmar').value.trim();
+
+  if (senha !== confirmar) {
+    alert("As senhas não coincidem!");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://127.0.0.1:5000/api/cadastrar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome, email, senha })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert("Cadastro realizado com sucesso!");
+      window.location.href = "login.html";
+    } else {
+      alert(data.erro || "Erro ao cadastrar usuário!");
+    }
+  } catch (err) {
+    alert("Erro ao conectar ao servidor.");
+  }
+});
+</script>
+
+</body>
+</html>

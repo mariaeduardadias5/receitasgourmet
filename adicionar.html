@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adicionar Receita - Receitas Gourmet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Open+Sans&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+  <div class="form-container">
+    <h1>Adicionar Nova Receita</h1>
+    <form id="form-receita">
+      <label for="nome">Nome da Receita:</label>
+      <input type="text" id="nome" name="nome" required placeholder="Ex: Bolo de Chocolate">
+
+      <label for="ingredientes">Ingredientes:</label>
+      <textarea id="ingredientes" name="ingredientes" required placeholder="Liste os ingredientes..."></textarea>
+
+      <label for="preparo">Modo de Preparo:</label>
+      <textarea id="preparo" name="preparo" required placeholder="Descreva o modo de preparo..."></textarea>
+
+      <label for="tempo">Tempo de Preparo (minutos):</label>
+      <input type="text" id="tempo" name="tempo" placeholder="Ex: 45">
+
+      <button type="submit">Salvar Receita</button>
+    </form>
+
+    <div class="back-link">
+      <p><a href="receitas.html">← Voltar para Minhas Receitas</a></p>
+    </div>
+  </div>
+<script>
+const usuario = JSON.parse(localStorage.getItem('usuarioLogado'));
+if (!usuario) {
+  alert("Você precisa estar logado para adicionar uma receita.");
+  window.location.href = "login.html";
+}
+
+document.getElementById('form-receita').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const nome = document.getElementById('nome').value.trim();
+  const ingredientes = document.getElementById('ingredientes').value.trim();
+  const preparo = document.getElementById('preparo').value.trim();
+  const tempo = document.getElementById('tempo').value.trim();
+
+  if (!nome || !ingredientes || !preparo) {
+    alert("Preencha todos os campos obrigatórios!");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://127.0.0.1:5000/api/receitas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nome, ingredientes, preparo, tempo, autor_id: usuario.id
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("Receita adicionada com sucesso!");
+      window.location.href = "receitas.html";
+    } else {
+      alert(data.erro || "Erro ao salvar a receita!");
+    }
+  } catch (err) {
+    alert("Erro de conexão com o servidor!");
+  }
+});
+</script>
+
+</body>
+</html>
