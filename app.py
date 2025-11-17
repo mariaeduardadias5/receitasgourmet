@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import sqlite3
 import os
@@ -10,12 +10,17 @@ CORS(app)
 # Inicializa o banco
 init_db()
 
+# ===============================
+# ROTA PRINCIPAL (FRONT-END)
+# ===============================
 @app.route("/")
 def home():
-    return "🚀 API de Receitas Online — Status: Funcionando!"
+    return render_template("login.html")
 
 
-
+# ===============================
+# ROTAS DE USUÁRIOS
+# ===============================
 @app.route("/api/cadastrar", methods=["POST"])
 def cadastrar_usuario():
     data = request.json
@@ -66,7 +71,6 @@ def login_usuario():
 # ===============================
 # ROTAS DE RECEITAS
 # ===============================
-
 @app.route("/api/receitas", methods=["GET", "POST"])
 def receitas():
     if request.method == "POST":
@@ -110,7 +114,8 @@ def receita_por_id(id):
         c.execute("""
             UPDATE receitas SET nome=?, ingredientes=?, preparo=?, tempo=?
             WHERE id=?
-        """, (data.get("nome"), data.get("ingredientes"), data.get("preparo"), data.get("tempo"), id))
+        """, (data.get("nome"), data.get("ingredientes"),
+              data.get("preparo"), data.get("tempo"), id))
         conn.commit()
         conn.close()
         return jsonify({"mensagem": "Receita atualizada!"})
@@ -124,6 +129,10 @@ def receita_por_id(id):
         return jsonify({"mensagem": "Receita excluída!"})
 
 
+# ===============================
+# RUN
+# ===============================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
+
